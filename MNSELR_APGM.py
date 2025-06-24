@@ -1,10 +1,6 @@
-import copy
+
 import numpy as np
 
-# ------------------------------------------------------------------
-#   Basic utilities: loss and gradients
-#   (identical to the original math, only English docstrings/comments)
-# ------------------------------------------------------------------
 def square_sum_error(W: np.ndarray, b: float,
                      X: np.ndarray, Y: np.ndarray) -> float:
     """
@@ -73,9 +69,6 @@ def gamma_fun(mu: float, W: np.ndarray, W0: np.ndarray,
         + quad_b / (2 * mu)
     )
 
-# ------------------------------------------------------------------
-#   Main solver: FISTA + L21 + L1  (exact replica of the original loop)
-# ------------------------------------------------------------------
 def L21L1(X: np.ndarray, Y: np.ndarray,
           lambda1: float, lambda21: float):
     """
@@ -86,9 +79,6 @@ def L21L1(X: np.ndarray, Y: np.ndarray,
     W : (m, m)  optimal weight matrix
     b : scalar   optimal bias
     """
-    # Preserve original variable names for clarity
-    lambda2 = lambda1      # L1 coefficient
-    lambda3 = lambda21     # L21 coefficient
 
     m = X.shape[1]         # matrix dimension
     W  = np.zeros((m, m))
@@ -127,13 +117,13 @@ def L21L1(X: np.ndarray, Y: np.ndarray,
             # element-wise L1 clipping + row-wise L21 shrinking
             for i in range(m):
                 Q = np.clip(Q, -lambda1, lambda1)
-                W[i, :] = (lambda3 * Q[i, :]) \
-                          / max(np.linalg.norm(Q[i, :]), lambda3)
+                W[i, :] = (lambda21 * Q[i, :]) \
+                          / max(np.linalg.norm(Q[i, :]), lambda21)
 
             # objective value
             f = square_sum_error(W, b, X, Y)
             g = sum(np.linalg.norm(W[i, :]) for i in range(m))
-            g = lambda3 * g + lambda2 * np.linalg.norm(W, ord=1)
+            g = lambda21 * g + lambda1 * np.linalg.norm(W, ord=1)
             o1 = f + g
 
             # sufficient decrease test
