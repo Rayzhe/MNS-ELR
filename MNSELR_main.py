@@ -1,8 +1,4 @@
-import os
-
 import numpy as np
-import scipy
-
 from Preprocessing import process_eeg_covariance
 from MNSELR_model import Class_L21L1
 
@@ -14,38 +10,23 @@ from MNSELR_model import Class_L21L1
 
 def main():
     # ======== 1. Load your data here ==========
-    filepath = f'D:/HH/data/data_1/'
-    files = os.listdir(filepath)
-    file_names = [file_name.split('.')[0] for file_name in files]
-    n_numbers = len(files)
-    cnt = np.zeros([n_numbers])
-    cnt_test = np.zeros([n_numbers])
-    accTest = np.zeros([n_numbers])
-    lambda12 = np.zeros([n_numbers])
-    acc_train = np.zeros([n_numbers])
-    results = []
-    for k in range(n_numbers):
-        f = scipy.io.loadmat(filepath + files[k])
-        subject = file_names[k]
-        dataTrain = f['X_train']
-        dataTest = f['X_test']
-        labelTrain = f['Y_train']
-        labelTest = f['Y_test']
-        y_train = labelTrain.squeeze()
-        y_test = labelTest.squeeze()
+    n_trials_train, n_trials_test = 50, 20
+    n_samples, n_channels = 750, 60
+    dataTrain = np.random.randn(n_trials_train, n_samples, n_channels)
+    dataTest = np.random.randn(n_trials_test, n_samples, n_channels)
+    y_train = np.random.choice([-1, 1], size=n_trials_train)
+    y_test = np.random.choice([-1, 1], size=n_trials_test)
 
-        # ======== 2. Preprocessing: Covariance, Whitening, Log mapping ==========
-        RsTrain, RsTest = process_eeg_covariance(dataTrain, dataTest)
+    # ======== 2. Preprocessing: Covariance, Whitening, Log mapping ==========
+    RsTrain, RsTest = process_eeg_covariance(dataTrain, dataTest)
 
-        # ======== 3. Train L21L1 model ==========
-        clf = Class_L21L1(lambda1=1.55, lambda21=3.05)
-        clf.fit(RsTrain, y_train)
+    # ======== 3. Train L21L1 model ==========
+    clf = Class_L21L1(lambda1=1.55, lambda21=3.05)
+    clf.fit(RsTrain, y_train)
 
-        # ======== 4. Predict and evaluate ==========
-        acc = clf.score(RsTest, y_test)
-        print(f"Test accuracy: {acc:.4f}")
-        results.append(acc)
-    print(np.mean(results))
+    # ======== 4. Predict and evaluate ==========
+    acc = clf.score(RsTest, y_test)
+    print(f"Test accuracy: {acc:.4f}")
 
     # ======== 5. (Optional) Use Bayesian Optimization for hyperparameter tuning ========
     """
